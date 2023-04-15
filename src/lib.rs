@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct StrSplit<'a> {
     // what havent we looked at
     remainder: &'a str,
@@ -42,5 +43,5 @@ fn it_works() {
 
     let letters = StrSplit::new(haystack, " ");
 
-    assert_eq!(letters, vec!["a", "b", "c", "d", "e"].into_iter())
+    assert!(letters.eq(vec!["a", "b", "c", "d", "e"].into_iter()));
 }

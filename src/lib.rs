@@ -1,11 +1,14 @@
-pub struct StrSplit {
+pub struct StrSplit<'a> {
     // what havent we looked at
-    remainder: &str,
-    delimiter: &str,
+    remainder: &'a str,
+    delimiter: &'a str,
 }
 
-impl StrSplit {
-    pub fn new(haystack: &str, delimiter: &str) -> Self {
+
+// you can only keep using the StrSplit as long as the
+// input strings are not de allocated
+impl<'a> StrSplit<'a> {
+    pub fn new(haystack: &'a str, delimiter: &'a str) -> Self {
         Self {
             remainder: haystack,
             delimiter,
@@ -14,8 +17,8 @@ impl StrSplit {
 }
 
 //iterate over StrSplit
-impl Iterator for StrSplit {
-    type Item = &str;
+impl<'a> Iterator for StrSplit<'a> {
+    type Item = &'a str;
 
     // find the next delimiter if one exists and chop off the rest
     fn next(&mut self) -> Option<Self::Item> {
@@ -24,7 +27,6 @@ impl Iterator for StrSplit {
             self.remainder = &self.remainder[(next_delim + self.delimiter.len())..];
             Some(until_delimiter)
         } else if self.remainder.is_empty() {
-            
             None
         } else {
             let rest = self.remainder;

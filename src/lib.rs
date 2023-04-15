@@ -1,16 +1,36 @@
-pub struct StrSplit {}
-
-impl StrSplit {
-    pub fn new(haystack: &str, delimiter: &str) -> Self {}
+pub struct StrSplit {
+    // what havent we looked at
+    remainder: &str,
+    delimiter: &str,
 }
 
+impl StrSplit {
+    pub fn new(haystack: &str, delimiter: &str) -> Self {
+        Self {
+            remainder: haystack,
+            delimiter,
+        }
+    }
+}
 
 //iterate over StrSplit
 impl Iterator for StrSplit {
     type Item = &str;
 
-    fn next (&mut self) -> Option<Self::Item> {
-
+    // find the next delimiter if one exists and chop off the rest
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(next_delim) = self.remainder.find(self.delimiter) {
+            let until_delimiter = &self.remainder[..next_delim];
+            self.remainder = &self.remainder[(next_delim + self.delimiter.len())..];
+            Some(until_delimiter)
+        } else if self.remainder.is_empty() {
+            
+            None
+        } else {
+            let rest = self.remainder;
+            self.remainder = &[];
+            Some(rest)
+        }
     }
 }
 
@@ -18,7 +38,7 @@ impl Iterator for StrSplit {
 fn it_works() {
     let haystack = "a b c d e";
 
-    let letters =  StrSplit::new(haystack, " ");
+    let letters = StrSplit::new(haystack, " ");
 
     assert_eq!(letters, vec!["a", "b", "c", "d", "e"].into_iter())
 }

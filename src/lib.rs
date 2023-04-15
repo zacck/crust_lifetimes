@@ -4,7 +4,6 @@ pub struct StrSplit<'a> {
     delimiter: &'a str,
 }
 
-
 // you can only keep using the StrSplit as long as the
 // input strings are not de allocated
 impl<'a> StrSplit<'a> {
@@ -30,7 +29,8 @@ impl<'a> Iterator for StrSplit<'a> {
             None
         } else {
             let rest = self.remainder;
-            self.remainder = &[];
+            //static lifetimes extend to the end of the program
+            self.remainder = "";
             Some(rest)
         }
     }

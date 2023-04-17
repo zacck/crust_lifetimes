@@ -1,16 +1,16 @@
 //Takes a string and splits into smaller
 // Strings separated by a delimiter
 #[derive(Debug)]
-pub struct StrSplit<'haystack, 'delimiter> {
+pub struct StrSplit<'haystack, D> {
     // what havent we looked at
     remainder: Option<&'haystack str>,
-    delimiter: &'delimiter str,
+    delimiter: D,
 }
 
 // you can only keep using the StrSplit as long as the
 // input strings are not de allocated
-impl<'haystack, 'delimiter> StrSplit<'haystack, 'delimiter> {
-    pub fn new(haystack: &'haystack str, delimiter: &'delimiter str) -> Self {
+impl<'haystack, D> StrSplit<'haystack, D> {
+    pub fn new(haystack: &'haystack str, delimiter: D) -> Self {
         Self {
             remainder: Some(haystack),
             delimiter,
@@ -18,17 +18,25 @@ impl<'haystack, 'delimiter> StrSplit<'haystack, 'delimiter> {
     }
 }
 
+//Anything that can find itself in a string
+pub trait Delimiter {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)>;
+}
+
 //iterate over StrSplit
-impl<'haystack, 'delimiter> Iterator for StrSplit<'haystack, 'delimiter> {
+impl<'haystack, D> Iterator for StrSplit<'haystack, D>
+where
+    D: Delimiter,
+{
     type Item = &'haystack str;
 
     // find the next delimiter if one exists and chop off the rest
     fn next(&mut self) -> Option<Self::Item> {
         //get a mutable reference to what is in remainder
         if let Some(ref mut remainder) = self.remainder {
-            if let Some(next_delim) = remainder.find(self.delimiter) {
-                let until_delimiter = &remainder[..next_delim];
-                *remainder = &remainder[(next_delim + self.delimiter.len())..];
+            if let Some((delim_start, delim_end)) = self.delimiter.find_next(remainder) {
+                let until_delimiter = &remainder[..delim_start];
+                *remainder = &remainder[delim_end..];
                 Some(until_delimiter)
             } else {
                 //if remainder search the remainder
@@ -40,11 +48,25 @@ impl<'haystack, 'delimiter> Iterator for StrSplit<'haystack, 'delimiter> {
     }
 }
 
+impl Delimiter for &str {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.find(self).map(|start| (start, start + self.len()))
+    }
+}
+
+impl Delimiter for char {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.char_indices()
+            .find(|(_, c)| c == self)
+            .map(|(start, _)| (start, start + 1))
+    }
+}
+
 //we can use StrSplit here since we should
 //stop when the delimiter first appears we only
 //do one step of the iteration and return the collected slice
 fn until_char(s: &str, c: char) -> &str {
-    StrSplit::new(s, &format!("{}", c))
+    StrSplit::new(s, c)
         .next()
         .expect("StrSplit always gives at least one result")
 }
